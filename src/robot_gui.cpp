@@ -1,3 +1,4 @@
+#include "geometry_msgs/Twist.h"
 #include "nav_msgs/Odometry.h"
 #include "robotinfo_msgs/RobotInfo10Fields.h"
 #include "ros/init.h"
@@ -15,6 +16,8 @@ RobotGUI::RobotGUI() {
                                   this); // sub to robot info
 
   odom_sub_ = nh_.subscribe("/odom", 10, &RobotGUI::odom_callback, this);
+
+  gui_command_pub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 }
 
 RobotGUI::~RobotGUI() {}
@@ -60,27 +63,46 @@ void RobotGUI::run() {
 
     // control
     cvui::text(frame, 10, 200, "Robot Control:");
-    cvui::button(frame, 100, 230, " FORWARD ");
-    cvui::button(frame, 100, 260, "   STOP  ");
-    cvui::button(frame, 100, 290, "BACKWARDS");
-    cvui::button(frame, 0, 260, "  LEFT   ");
-    cvui::button(frame, 200, 260, "   RIGHT ");
+
+    if (cvui::button(frame, 100, 230, " FORWARD ")) {
+      twist_msg_.linear.x += 0.1;
+    }
+
+    if (cvui::button(frame, 100, 260, "   STOP  ")) {
+      twist_msg_.linear.x = 0;
+      twist_msg_.angular.z = 0;
+    }
+    if (cvui::button(frame, 100, 290, "BACKWARDS")) {
+      twist_msg_.linear.x += -0.1;
+    }
+    if (cvui::button(frame, 0, 260, "  LEFT   ")) {
+      twist_msg_.angular.z += 0.1;
+    }
+    if (cvui::button(frame, 200, 260, "   RIGHT ")) {
+      twist_msg_.angular.z += -0.1;
+    }
 
     // velocities
     cvui::text(frame, 10, 330, "Velocities:");
 
     // linear
+    linear_velocity_ = twist_msg_.linear.x;
+    std::ostringstream lv;
+    lv << std::fixed << std::setprecision(2) << linear_velocity_;
     cvui::text(frame, 10, 350, "Linear Velocity");
-    cvui::text(frame, 10, 370, " m/s", 0.5, 0xFF0000);
+    cvui::text(frame, 10, 370, lv.str() + " m/s", 0.5, 0xFF0000);
     // angular
+    angular_velocity_ = twist_msg_.angular.z;
+    std::ostringstream av;
+    av << std::fixed << std::setprecision(2) << angular_velocity_;
     cvui::text(frame, 150, 350, "Angular Velocity");
-    cvui::text(frame, 150, 370, " rad/s", 0.5, 0xFF0000);
+    cvui::text(frame, 150, 370, av.str() + " rad/s", 0.5, 0xFF0000);
 
     // robot position
     cvui::text(frame, 10, 420, "Estimate Robot Position via Odometry:");
     cvui::text(frame, 10, 440, "X: " + std::to_string(static_cast<int>(x_)));
     cvui::text(frame, 70, 440, "Y: " + std::to_string(static_cast<int>(y_)));
-    cvui::text(frame, 130, 440, "Z: " std::to_string(static_cast<int>(z_)));
+    cvui::text(frame, 130, 440, "Z: " + std::to_string(static_cast<int>(z_)));
 
     // distance travelled
     cvui::text(frame, 10, 490, "Distance Travelled:");
@@ -89,6 +111,8 @@ void RobotGUI::run() {
     cvui::text(frame, 80, 510, "Distance Travelled: x m");
 
     cvui::imshow(WINDOW_NAME, frame);
+
+    gui_command_pub_.publish(twist_msg_); // publish gui commands
 
     if (cv::waitKey(20) == 27) { // Press 'Esc' to exit.
       break;
