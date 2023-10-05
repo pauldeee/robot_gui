@@ -22,6 +22,12 @@ private:
 
   ros::Publisher gui_command_pub_;
 
+  ros::ServiceClient distance_service_;
+  std::string distance_service_response_;
+
+  ros::ServiceClient reset_distance_service_;
+  std::string reset_distance_service_response_;
+
   robotinfo_msgs::RobotInfo10Fields robot_info_msg_;
   nav_msgs::Odometry odom_msg_;
   geometry_msgs::Twist twist_msg_;

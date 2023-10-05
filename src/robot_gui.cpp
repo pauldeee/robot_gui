@@ -2,6 +2,7 @@
 #include "nav_msgs/Odometry.h"
 #include "robotinfo_msgs/RobotInfo10Fields.h"
 #include "ros/init.h"
+#include "std_srvs/Trigger.h"
 #include <cmath>
 #define CVUI_IMPLEMENTATION
 #include "robot_gui/cvui.h"
@@ -18,6 +19,10 @@ RobotGUI::RobotGUI() {
   odom_sub_ = nh_.subscribe("/odom", 10, &RobotGUI::odom_callback, this);
 
   gui_command_pub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+
+  distance_service_ = nh_.serviceClient<std_srvs::Trigger>("/get_distance");
+  reset_distance_service_ =
+      nh_.serviceClient<std_srvs::Trigger>("/reset_distance");
 }
 
 RobotGUI::~RobotGUI() {}
@@ -84,7 +89,6 @@ void RobotGUI::run() {
 
     // velocities
     cvui::text(frame, 10, 330, "Velocities:");
-
     // linear
     linear_velocity_ = twist_msg_.linear.x;
     std::ostringstream lv;
@@ -105,14 +109,34 @@ void RobotGUI::run() {
     cvui::text(frame, 130, 440, "Z: " + std::to_string(static_cast<int>(z_)));
 
     // distance travelled
-    cvui::text(frame, 10, 490, "Distance Travelled:");
+    cvui::text(frame, 10, 490,
+               "Distance Travelled: " + distance_service_response_);
+    // get_distance service call
+    if (cvui::button(frame, 10, 510, "Get Distance")) {
+      std_srvs::Trigger srv;
 
-    cvui::button(frame, 10, 510, "Call");
-    cvui::text(frame, 80, 510, "Distance Travelled: x m");
+      if (distance_service_.call(srv)) {
+        distance_service_response_ = srv.response.message + " meters";
 
-    cvui::imshow(WINDOW_NAME, frame);
+      } else {
+        distance_service_response_ = "GET FAILED";
+      }
+    }
+    // rest_distance service call
+    if (cvui::button(frame, 10, 540, "Reset Distance")) {
+      std_srvs::Trigger srv;
+      if (reset_distance_service_.call(srv)) {
+        distance_service_response_ = srv.response.message + " meters";
+
+      } else {
+        distance_service_response_ = "RESET FAILED";
+      }
+    }
 
     gui_command_pub_.publish(twist_msg_); // publish gui commands
+
+    cvui::update();
+    cvui::imshow(WINDOW_NAME, frame);
 
     if (cv::waitKey(20) == 27) { // Press 'Esc' to exit.
       break;
@@ -122,20 +146,3 @@ void RobotGUI::run() {
     ros::spinOnce();
   }
 }
-
-// void initializeUI() { cvui::init("Simple cvui Application"); }
-
-// void updateUI(cv::Mat &frame) {
-//   cv::namedWindow("Simple cvui Application", cv::WINDOW_NORMAL);
-
-//   bool buttonClicked = cvui::button(frame, 50, 50, "Click me!");
-//   if (buttonClicked) {
-//     cv::putText(frame, "Button clicked!", cv::Point(50, 150),
-//                 cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
-//   }
-
-//   static int trackbarValue = 50;
-//   cvui::trackbar(frame, 50, 200, 165, &trackbarValue, 0, 100);
-
-//   cvui::imshow("Simple cvui Application", frame);
-// }
