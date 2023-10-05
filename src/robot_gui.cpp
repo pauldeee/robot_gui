@@ -1,3 +1,4 @@
+#include "nav_msgs/Odometry.h"
 #include "robotinfo_msgs/RobotInfo10Fields.h"
 #include "ros/init.h"
 #include <cmath>
@@ -12,9 +13,17 @@ RobotGUI::RobotGUI() {
 
   robot_info_sub_ = nh_.subscribe("/robot_info", 10, &RobotGUI::robot_info_cb,
                                   this); // sub to robot info
+
+  odom_sub_ = nh_.subscribe("/odom", 10, &RobotGUI::odom_callback, this);
 }
 
 RobotGUI::~RobotGUI() {}
+
+void RobotGUI::odom_callback(const nav_msgs::OdometryConstPtr &msg) {
+  x_ = msg->pose.pose.position.x;
+  y_ = msg->pose.pose.position.y;
+  z_ = msg->pose.pose.position.z;
+}
 
 void RobotGUI::robot_info_cb(
     const robotinfo_msgs::RobotInfo10Fields::ConstPtr &msg) {
@@ -69,9 +78,9 @@ void RobotGUI::run() {
 
     // robot position
     cvui::text(frame, 10, 420, "Estimate Robot Position via Odometry:");
-    cvui::text(frame, 10, 440, "X: ");
-    cvui::text(frame, 70, 440, "Y: ");
-    cvui::text(frame, 130, 440, "Z: ");
+    cvui::text(frame, 10, 440, "X: " + std::to_string(static_cast<int>(x_)));
+    cvui::text(frame, 70, 440, "Y: " + std::to_string(static_cast<int>(y_)));
+    cvui::text(frame, 130, 440, "Z: " std::to_string(static_cast<int>(z_)));
 
     // distance travelled
     cvui::text(frame, 10, 490, "Distance Travelled:");

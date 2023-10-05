@@ -26,6 +26,8 @@ private:
   nav_msgs::Odometry odom_msg_;
   geometry_msgs::Twist twist_msg_;
 
+  int x_, y_, z_;
+
   void robot_info_cb(const robotinfo_msgs::RobotInfo10Fields::ConstPtr &msg);
   void odom_callback(const nav_msgs::OdometryConstPtr &msg);
 };
