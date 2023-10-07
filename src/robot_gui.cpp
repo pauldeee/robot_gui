@@ -4,6 +4,7 @@
 #include "ros/init.h"
 #include "std_srvs/Trigger.h"
 #include <cmath>
+#include <sstream>
 #define CVUI_IMPLEMENTATION
 #include "robot_gui/cvui.h"
 
@@ -42,6 +43,9 @@ void RobotGUI::robot_info_cb(
   robot_info_msg_.data_field_05 = msg->data_field_05;
   robot_info_msg_.data_field_06 = msg->data_field_06;
   robot_info_msg_.data_field_07 = msg->data_field_07;
+  robot_info_msg_.data_field_07 = msg->data_field_08;
+  robot_info_msg_.data_field_07 = msg->data_field_09;
+  robot_info_msg_.data_field_07 = msg->data_field_10;
 }
 
 void RobotGUI::run() {
@@ -65,54 +69,69 @@ void RobotGUI::run() {
     cvui::text(frame, 10, 110, robot_info_msg_.data_field_05);
     cvui::text(frame, 10, 130, robot_info_msg_.data_field_06);
     cvui::text(frame, 10, 150, robot_info_msg_.data_field_07);
+    cvui::text(frame, 10, 170, robot_info_msg_.data_field_08);
+    cvui::text(frame, 10, 190, robot_info_msg_.data_field_09);
+    cvui::text(frame, 10, 210, robot_info_msg_.data_field_10);
 
     // control
-    cvui::text(frame, 10, 200, "Robot Control:");
+    cvui::text(frame, 10, 290, "Robot Control:");
 
-    if (cvui::button(frame, 100, 230, " FORWARD ")) {
+    if (cvui::button(frame, 100, 290, " FORWARD ")) {
       twist_msg_.linear.x += 0.1;
     }
 
-    if (cvui::button(frame, 100, 260, "   STOP  ")) {
+    if (cvui::button(frame, 100, 320, "   STOP  ")) {
       twist_msg_.linear.x = 0;
       twist_msg_.angular.z = 0;
     }
-    if (cvui::button(frame, 100, 290, "BACKWARDS")) {
+    if (cvui::button(frame, 100, 350, "BACKWARDS")) {
       twist_msg_.linear.x += -0.1;
     }
-    if (cvui::button(frame, 0, 260, "  LEFT   ")) {
+    if (cvui::button(frame, 0, 320, "  LEFT   ")) {
       twist_msg_.angular.z += 0.1;
     }
-    if (cvui::button(frame, 200, 260, "   RIGHT ")) {
+    if (cvui::button(frame, 200, 320, "   RIGHT ")) {
       twist_msg_.angular.z += -0.1;
     }
 
     // velocities
-    cvui::text(frame, 10, 330, "Velocities:");
+    cvui::text(frame, 10, 390, "Velocities:");
     // linear
     linear_velocity_ = twist_msg_.linear.x;
     std::ostringstream lv;
     lv << std::fixed << std::setprecision(2) << linear_velocity_;
-    cvui::text(frame, 10, 350, "Linear Velocity");
-    cvui::text(frame, 10, 370, lv.str() + " m/s", 0.5, 0xFF0000);
+    cvui::text(frame, 10, 410, "Linear Velocity");
+    cvui::text(frame, 10, 430, lv.str() + " m/s", 0.5, 0xFF0000);
     // angular
     angular_velocity_ = twist_msg_.angular.z;
     std::ostringstream av;
     av << std::fixed << std::setprecision(2) << angular_velocity_;
-    cvui::text(frame, 150, 350, "Angular Velocity");
-    cvui::text(frame, 150, 370, av.str() + " rad/s", 0.5, 0xFF0000);
+    cvui::text(frame, 150, 410, "Angular Velocity");
+    cvui::text(frame, 150, 430, av.str() + " rad/s", 0.5, 0xFF0000);
 
     // robot position
-    cvui::text(frame, 10, 420, "Estimate Robot Position via Odometry:");
-    cvui::text(frame, 10, 440, "X: " + std::to_string(static_cast<int>(x_)));
-    cvui::text(frame, 70, 440, "Y: " + std::to_string(static_cast<int>(y_)));
-    cvui::text(frame, 130, 440, "Z: " + std::to_string(static_cast<int>(z_)));
+    cvui::text(frame, 10, 480, "Estimate Robot Position via Odometry:");
+    cvui::text(frame, 10, 500,
+               "X: " + static_cast<std::ostringstream &>(
+                           (std::ostringstream()
+                            << std::fixed << std::setprecision(2) << x_))
+                           .str());
+    cvui::text(frame, 70, 500,
+               "Y: " + static_cast<std::ostringstream &>(
+                           (std::ostringstream()
+                            << std::fixed << std::setprecision(2) << y_))
+                           .str());
+    cvui::text(frame, 130, 500,
+               "Z: " + static_cast<std::ostringstream &>(
+                           (std::ostringstream()
+                            << std::fixed << std::setprecision(2) << z_))
+                           .str());
 
     // distance travelled
-    cvui::text(frame, 10, 490,
+    cvui::text(frame, 10, 550,
                "Distance Travelled: " + distance_service_response_);
     // get_distance service call
-    if (cvui::button(frame, 10, 510, "Get Distance")) {
+    if (cvui::button(frame, 10, 570, "Get Distance")) {
       std_srvs::Trigger srv;
 
       if (distance_service_.call(srv)) {
@@ -123,7 +142,7 @@ void RobotGUI::run() {
       }
     }
     // rest_distance service call
-    if (cvui::button(frame, 10, 540, "Reset Distance")) {
+    if (cvui::button(frame, 10, 600, "Reset Distance")) {
       std_srvs::Trigger srv;
       if (reset_distance_service_.call(srv)) {
         distance_service_response_ = srv.response.message + " meters";

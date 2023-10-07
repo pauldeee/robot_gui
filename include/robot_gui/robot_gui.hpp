@@ -26,13 +26,12 @@ private:
   std::string distance_service_response_;
 
   ros::ServiceClient reset_distance_service_;
-  std::string reset_distance_service_response_;
 
   robotinfo_msgs::RobotInfo10Fields robot_info_msg_;
   nav_msgs::Odometry odom_msg_;
   geometry_msgs::Twist twist_msg_;
 
-  int x_, y_, z_;
+  double x_ = 0, y_ = 0, z_ = 0;
 
   double linear_velocity_ = 0, angular_velocity_ = 0;
 
